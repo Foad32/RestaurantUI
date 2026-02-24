@@ -1,11 +1,12 @@
-import React from 'react';
-import { Typography, Button } from '@mui/material';
+import React, { useState } from 'react';
+import { Typography, Button, TextField } from '@mui/material';
 import { useRouter } from 'next/navigation'
 
 import CustomTextField from '@/app/(DashboardLayout)/components/forms/theme-elements/CustomTextField';
 import { Stack } from '@mui/system';
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import { schema } from "./RegisterZod"
+import { useRegisterMutation } from '@/services/authAPI';
 
 interface registerType {
     title?: string;
@@ -19,10 +20,20 @@ interface IFormData {
     password: string
 }
 
+type ZodValidationError = {
+    userName?: string[];
+    phoneNumber?: string[];
+    password?: string[];
+};
+
+
 const AuthRegister = ({ title, subtitle, subtext }: registerType) => {
+    const [registerErrorItem, setRegisterErrorItem] = useState<ZodValidationError | null>(null);
+    const [RegisterUser, { isLoading: isRegisterLoading, error: registerError }] = useRegisterMutation();
     const router: AppRouterInstance = useRouter();
 
-    const registerUser = (formData: FormData) => {
+
+    const registerUserAction = async (formData: FormData) => {
         // Website for form
         // https://nextjs.org/docs/app/guides/forms
 
@@ -32,23 +43,27 @@ const AuthRegister = ({ title, subtitle, subtext }: registerType) => {
             password: formData.get("password")?.toString() || ''
         }
 
-        // console.log("schemaschemaschemaschema", schema.safeParse);
-
         const validatedFields = schema.safeParse({
             userName: rawFormData.userName,
             phoneNumber: rawFormData.phoneNumber,
             password: rawFormData.password
         })
 
-        // Not completed
+        // After displaying some fields are empty, the fields that have data remove them
         if (!validatedFields.success) {
-            console.error("errorerrorerror", validatedFields.error.flatten().fieldErrors.password); // Handle error
+            const flattenValidation = validatedFields.error.flatten().fieldErrors;
+            setRegisterErrorItem(flattenValidation)
             return;
         }
 
-        console.log("rawFormDatarawFormData", rawFormData);
+        await RegisterUser(rawFormData);
 
-        // router.push("/authentication/login");
+        if (registerError) {
+            // Needs an error alert
+            return;
+        }
+
+        router.push("/authentication/login");
     }
 
     return (
@@ -61,25 +76,30 @@ const AuthRegister = ({ title, subtitle, subtext }: registerType) => {
 
             {subtext}
 
-            <form action={registerUser}>
+            <form action={registerUserAction}>
                 <Stack mb={3}>
                     <Typography variant="subtitle1"
                         fontWeight={600} component="label" htmlFor='userName' mb="5px">نام کاربری</Typography>
-                    <CustomTextField id="userName" variant="outlined" name="userName" fullWidth />
+                    <TextField id="userName" variant="outlined" name="userName" fullWidth
+                        error={!!registerErrorItem?.userName}
+                        helperText={registerErrorItem?.userName} />
 
                     <Typography variant="subtitle1"
                         fontWeight={600} component="label" htmlFor='phoneNumber' mb="5px" mt="25px">شماره موبایل</Typography>
-                    <CustomTextField id="phoneNumber" variant="outlined" fullWidth name="phoneNumber" />
+                    <TextField id="phoneNumber" variant="outlined" fullWidth name="phoneNumber"
+                        error={!!registerErrorItem?.phoneNumber}
+                        helperText={registerErrorItem?.phoneNumber}
+                    />
 
                     <Typography variant="subtitle1"
                         fontWeight={600} component="label" htmlFor='password' mb="5px" mt="25px">رمز ورود</Typography>
-                    <CustomTextField id="password" variant="outlined" fullWidth name="password" />
+                    <TextField id="password" variant="outlined" fullWidth name="password"
+                        error={!!registerErrorItem?.password}
+                        helperText={registerErrorItem?.password} />
                 </Stack>
-                <Button color="primary" variant="contained" size="large" fullWidth type='submit'
-                // onClick={RegisterRequest}
-                // component={Link} href="/authentication/login"
+                <Button color="primary" variant="contained" size="large" fullWidth type='submit' disabled={isRegisterLoading}
                 >
-                    Sign Up
+                    ثبت نام
                 </Button>
             </form>
             {subtitle}

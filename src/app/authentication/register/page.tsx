@@ -4,8 +4,14 @@ import Link from "next/link";
 import PageContainer from "@/app/(DashboardLayout)/components/container/PageContainer";
 import Logo from "@/app/(DashboardLayout)/layout/shared/logo/Logo";
 import AuthRegister from "../auth/AuthRegister";
+import { useRegisterMutation } from "@/services/authAPI";
+// import { useCreatePostsMutation, useGetPostsQuery } from "@/services/jsonPlaceholderApi";
 
 const Register2 = () => {
+  // const { data, error, isLoading } = useGetPostsQuery();
+  // console.log("datadatadatadata", data);
+  // const [createPost, { isLoading: isCreating, error: createError }] = useCreatePostsMutation();
+
 
   return (
     <PageContainer title="Register" description="this is Register page">
