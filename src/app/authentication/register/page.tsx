@@ -14,7 +14,7 @@ const Register2 = () => {
 
 
   return (
-    <PageContainer title="Register" description="this is Register page">
+    <PageContainer title="Register" description="this is Register page" >
       <Box
         sx={{
           position: "relative",
@@ -26,7 +26,7 @@ const Register2 = () => {
             position: "absolute",
             height: "100%",
             width: "100%",
-            opacity: "0.3",
+            opacity: "0.3"
           },
         }}
       >
@@ -50,9 +50,9 @@ const Register2 = () => {
               elevation={9}
               sx={{ p: 4, zIndex: 1, width: "100%", maxWidth: "500px" }}
             >
-              <Box display="flex" alignItems="center" justifyContent="center">
+              {/* <Box display="flex" alignItems="center" justifyContent="center">
                 <Logo />
-              </Box>
+              </Box>B */}
               <AuthRegister
                 subtext={
                   <Typography
@@ -61,7 +61,7 @@ const Register2 = () => {
                     color="textSecondary"
                     mb={1}
                   >
-                    Your Social Campaigns
+                    ثبت نام کاربر
                   </Typography>
                 }
                 subtitle={
@@ -72,13 +72,6 @@ const Register2 = () => {
                     mt={3}
                   >
                     <Typography
-                      color="textSecondary"
-                      variant="h6"
-                      fontWeight="400"
-                    >
-                      Already have an Account?
-                    </Typography>
-                    <Typography
                       component={Link}
                       href="/authentication/login"
                       fontWeight="500"
@@ -87,7 +80,14 @@ const Register2 = () => {
                         color: "primary.main",
                       }}
                     >
-                      Sign In
+                      ورود
+                    </Typography>
+                    <Typography
+                      color="textSecondary"
+                      variant="h6"
+                      fontWeight="400"
+                    >
+                      آیا حساب کاربری دارید؟
                     </Typography>
                   </Stack>
                 }
