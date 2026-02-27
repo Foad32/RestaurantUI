@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 
 import { Stack } from '@mui/system';
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
-import { schema } from "./RegisterZod"
+import { registerSchema } from "./RegisterZod"
 import { useRegisterMutation } from '@/services/authAPI';
 import { toast, ToastContainer } from 'react-toastify';
 
@@ -30,13 +30,17 @@ type ZodValidationError = {
 
 const AuthRegister = ({ title, subtitle, subtext }: registerType) => {
     const [registerErrorItem, setRegisterErrorItem] = useState<ZodValidationError | null>(null);
-    const [RegisterUser, { isLoading: isRegisterLoading, error: registerError }] = useRegisterMutation();
+    const [RegisterUser, { isLoading: isRegisterLoading, error: registerError, isSuccess }] = useRegisterMutation();
     const router: AppRouterInstance = useRouter();
 
+    const registerUserAction = async (rawFormData: IFormData) => {
+        await RegisterUser(rawFormData);
+    };
 
-    const registerUserAction = async (formData: FormData) => {
-        // Website for form
-        // https://nextjs.org/docs/app/guides/forms
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+
+        const formData = new FormData(e.currentTarget);
 
         const rawFormData: IFormData = {
             userName: formData.get("userName")?.toString() || '',
@@ -45,7 +49,7 @@ const AuthRegister = ({ title, subtitle, subtext }: registerType) => {
             password: formData.get("password")?.toString() || ''
         }
 
-        const validatedFields = schema.safeParse({
+        const validatedFields = registerSchema.safeParse({
             userName: rawFormData.userName,
             phoneNumber: rawFormData.phoneNumber,
             emailAddress: rawFormData.emailAddress,
@@ -59,22 +63,21 @@ const AuthRegister = ({ title, subtitle, subtext }: registerType) => {
             return;
         }
 
-        try {
-            await RegisterUser(rawFormData).unwrap();
-        } catch {
-            toast.error("ثبت نام با مشکل مواجه شد");
-            return;
-        }
-
-
-        if (registerError) {
-            // Needs an error alert
-            toast.error("ثبت نام با مشکل مواجه شد");
-            return;
-        }
-
-        // router.push("/authentication/login");
+        registerUserAction(rawFormData)
     }
+
+    useEffect(() => {
+        if (registerError) {
+            toast.error("ثبت نام با مشکل مواجه شد");
+        }
+
+        if (isSuccess) {
+            toast.success("ثبت نام با موفقیت انجام شد");
+            router.push("/authentication/login");
+        }
+
+    }, [registerError, isSuccess]);
+
 
     return (
         <>
@@ -88,50 +91,40 @@ const AuthRegister = ({ title, subtitle, subtext }: registerType) => {
 
             {subtext}
 
-            <form action={registerUserAction} dir='rtl'>
+            <form onSubmit={handleSubmit} dir='rtl'>
                 <Stack mb={3} sx={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-                    {/* <Typography variant="subtitle1"
-                        fontWeight={600} component="label" htmlFor='userName' mb="5px">نام کاربری</Typography> */}
+
                     <TextField
                         id="userName"
                         variant="outlined"
                         name="userName"
                         fullWidth
                         label={
-                            <span style={{ display: "flex", gap: "5px" }}>
-                                <span style={{ color: 'red', marginRight: '4px' }}>*</span>
+                            <span style={{ display: "flex", gap: "1px" }}>
                                 نام کاربری
+                                <span style={{ color: 'red', marginRight: '4px' }}>*</span>
                             </span>
                         }
                         error={!!registerErrorItem?.userName}
                         helperText={registerErrorItem?.userName}
+                        disabled={isRegisterLoading}
                     />
 
-                    {/* <Typography variant="subtitle1"
-                        fontWeight={600} component="label" htmlFor='phoneNumber' mb="5px" mt="25px">شماره موبایل</Typography>
-                    <TextField id="phoneNumber" variant="outlined" fullWidth name="phoneNumber"
-                        error={!!registerErrorItem?.phoneNumber}
-                        helperText={registerErrorItem?.phoneNumber}
-                    /> */}
                     <TextField
                         id="phoneNumber"
                         variant="outlined"
                         name="phoneNumber"
                         fullWidth
                         label={
-                            <span style={{ display: "flex", gap: "5px" }}>
-                                <span style={{ color: 'red', marginRight: '4px' }}>*</span>
+                            <span style={{ display: "flex", gap: "1px" }}>
                                 شماره موبایل
+                                <span style={{ color: 'red', marginRight: '4px' }}>*</span>
                             </span>
                         }
                         error={!!registerErrorItem?.phoneNumber}
                         helperText={registerErrorItem?.phoneNumber}
+                        disabled={isRegisterLoading}
                     />
-
-                    {/* <Typography variant="subtitle1"
-                        fontWeight={600} component="label" htmlFor='emailAddress' mb="5px" mt="25px">شماره موبایل</Typography>
-                    <TextField id="emailAddress" variant="outlined" fullWidth name="emailAddress"
-                    /> */}
 
                     <TextField
                         id="emailAddress"
@@ -143,33 +136,31 @@ const AuthRegister = ({ title, subtitle, subtext }: registerType) => {
                                 آدرس پستی
                             </span>
                         }
+                        disabled={isRegisterLoading}
                     />
 
-                    {/* <Typography variant="subtitle1"
-                        fontWeight={600} component="label" htmlFor='password' mb="5px" mt="25px">رمز ورود</Typography>
-                    <TextField id="password" variant="outlined" fullWidth name="password"
-                        error={!!registerErrorItem?.password}
-                        helperText={registerErrorItem?.password} /> */}
 
                     <TextField
                         id="password"
                         variant="outlined"
                         name="password"
+                        type='password'
                         fullWidth
                         label={
-                            <span style={{ display: "flex", gap: "5px" }}>
-                                <span style={{ color: 'red', marginRight: '4px' }}>*</span>
+                            <span style={{ display: "flex", gap: "1px" }}>
                                 رمز ورود
+                                <span style={{ color: 'red', marginRight: '4px' }}>*</span>
                             </span>
                         }
                         error={!!registerErrorItem?.password}
                         helperText={registerErrorItem?.password}
+                        disabled={isRegisterLoading}
                     />
 
                 </Stack>
                 <Button color="primary" variant="contained" size="large" fullWidth type='submit' disabled={isRegisterLoading}
                 >
-                    ثبت نام
+                    {isRegisterLoading ? "درحال انجام عملیات" : "ثبت نام"}
                 </Button>
             </form>
             {subtitle}

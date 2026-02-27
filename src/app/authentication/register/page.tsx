@@ -56,10 +56,11 @@ const Register2 = () => {
               <AuthRegister
                 subtext={
                   <Typography
-                    variant="subtitle1"
+                    variant="h5"
                     textAlign="center"
                     color="textSecondary"
                     mb={1}
+
                   >
                     ثبت نام کاربر
                   </Typography>

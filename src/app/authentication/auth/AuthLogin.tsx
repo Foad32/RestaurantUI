@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Typography,
@@ -7,10 +7,13 @@ import {
   Button,
   Stack,
   Checkbox,
+  TextField,
 } from "@mui/material";
 import Link from "next/link";
+import { loginSchema } from "./LoginZod";
+import { useLoginMutation } from "@/services/authAPI";
+import { toast } from "react-toastify";
 
-import CustomTextField from "@/app/(DashboardLayout)/components/forms/theme-elements/CustomTextField";
 
 interface loginType {
   title?: string;
@@ -18,11 +21,91 @@ interface loginType {
   subtext?: React.ReactNode;
 }
 
-const AuthLogin = ({ title, subtitle, subtext }: loginType) => {
+interface IFormData {
+  phoneOrEmail: string,
+  password: string
+}
 
-  const loginUserAction = async (formData: FormData) => {
-    console.log(formData);
+interface ILoginData {
+  PhoneNumber?: string,
+  EmailAddress?: string,
+  Password: string
+}
+
+
+type ZodValidationError = {
+  phoneOrEmail?: string[];
+  password?: string[];
+};
+
+const AuthLogin = ({ title, subtitle, subtext }: loginType) => {
+  const [loginErrorField, setLoginErrorField] = useState<ZodValidationError | null>(null);
+  const [LoginUser, { isLoading: isLoginLoading, error: loginError }] = useLoginMutation();
+
+  const recognizeEmailOrPhoneNumber = async (phoneOrEmail: string): Promise<string | undefined> => {
+    const arrayOfEnteredValue: string[] = phoneOrEmail.split("");
+
+    let valueType: string | undefined = "phone";
+
+    arrayOfEnteredValue.forEach((letter) => {
+      const typeOfLetter = typeof letter;
+
+      // Make these two conditions stop foreach
+      if (typeOfLetter == "string" && phoneOrEmail.includes("@")) valueType = "email";
+
+      if (typeOfLetter == "string" && !phoneOrEmail.includes("@")) valueType = undefined;
+    })
+
+    return valueType;
   }
+
+  const loginUser = async (data: ILoginData): Promise<void> => {
+    const response = LoginUser(data)
+    console.log("tokentokentoken", (await response).data?.token);
+  }
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    const formData = new FormData(e.currentTarget);
+
+    const rawFormData: IFormData = {
+      phoneOrEmail: formData.get("phoneOrEmail")?.toString() || '',
+      password: formData.get("password")?.toString() || ''
+    }
+
+    const validatedFields = loginSchema.safeParse({
+      phoneOrEmail: rawFormData.phoneOrEmail,
+      password: rawFormData.password
+    });
+
+    if (!validatedFields.success) {
+      const flattenValidation = validatedFields.error.flatten().fieldErrors;
+      setLoginErrorField(flattenValidation)
+      return;
+    }
+
+    const emailOrPhoneNumber: string | undefined = await recognizeEmailOrPhoneNumber(rawFormData.phoneOrEmail);
+
+    if (emailOrPhoneNumber == undefined) {
+      toast.error("شماره یا ایمیل وارد شده معتبر نیست")
+      return;
+    }
+
+    const dataObj: ILoginData = {
+      PhoneNumber: emailOrPhoneNumber == "phone" ? rawFormData.phoneOrEmail : undefined,
+      EmailAddress: emailOrPhoneNumber == "email" ? rawFormData.phoneOrEmail : undefined,
+      Password: rawFormData.password
+    };
+
+    await loginUser(dataObj);
+  };
+
+  useEffect(() => {
+    if (loginError) {
+      toast.error("ورود با مشکل مواجه شد")
+    }
+  }, [loginError])
 
   return (
     <>
@@ -35,30 +118,39 @@ const AuthLogin = ({ title, subtitle, subtext }: loginType) => {
       {subtext}
 
       <Stack>
-        <form>
-          <Typography
-            variant="subtitle1"
-            fontWeight={600}
-            component="label"
-            htmlFor="username"
-            mb="5px"
-          >
-            Username
-          </Typography>
-          <CustomTextField variant="outlined" fullWidth />
+        <form onSubmit={handleSubmit}>
+          <TextField
+            id="phoneOrEmail"
+            variant="outlined"
+            name="phoneOrEmail"
+            fullWidth
+            label={
+              <span style={{ display: "flex", gap: "1px" }}>
+                شماره موبایل یا ایمیل
+                <span style={{ color: 'red', marginRight: '4px' }}>*</span>
+              </span>
+            }
+            error={!!loginErrorField?.phoneOrEmail}
+            helperText={loginErrorField?.phoneOrEmail}
+            disabled={isLoginLoading}
+          />
+          <TextField
+            id="password"
+            variant="outlined"
+            name="password"
+            type="password"
+            fullWidth
+            label={
+              <span style={{ display: "flex", gap: "1px" }}>
+                رمز عبور
+                <span style={{ color: 'red', marginRight: '4px' }}>*</span>
+              </span>
+            }
+            error={!!loginErrorField?.password}
+            helperText={loginErrorField?.password}
+            disabled={isLoginLoading}
+          />
         </form>
-        <Box mt="25px">
-          <Typography
-            variant="subtitle1"
-            fontWeight={600}
-            component="label"
-            htmlFor="password"
-            mb="5px"
-          >
-            Password
-          </Typography>
-          <CustomTextField type="password" variant="outlined" fullWidth />
-        </Box>
         <Stack
           justifyContent="space-between"
           direction="row"
@@ -80,7 +172,7 @@ const AuthLogin = ({ title, subtitle, subtext }: loginType) => {
               color: "primary.main",
             }}
           >
-            Forgot Password ?
+            رمز را فراموش کرده اید؟
           </Typography>
         </Stack>
       </Stack>
@@ -93,8 +185,9 @@ const AuthLogin = ({ title, subtitle, subtext }: loginType) => {
           component={Link}
           href="/"
           type="submit"
+          disabled={isLoginLoading}
         >
-          Sign In
+          {isLoginLoading ? "درحال انجام عملیات" : "ورود"}
         </Button>
       </Box>
       {subtitle}

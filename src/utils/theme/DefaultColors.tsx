@@ -9,7 +9,7 @@ export const plus = Plus_Jakarta_Sans({
 });
 
 const baselightTheme = createTheme({
-  direction: "ltr",
+  direction: "rtl",
   palette: {
     primary: {
       main: "#5D87FF",

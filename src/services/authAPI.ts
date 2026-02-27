@@ -5,13 +5,17 @@ interface IRegister {
     phoneNumber: string,
     emailAddress?: string,
     password: string
-}
+};
 
 interface ILogin {
     PhoneNumber?: string,
     EmailAddress?: string,
     Password: string
-}
+};
+
+interface ILoginResponse {
+    token: string
+};
 
 export const authApi = createApi({
     reducerPath: "authApi",
@@ -24,7 +28,7 @@ export const authApi = createApi({
                 body: newUser
             })
         }),
-        login: builder.mutation<string, ILogin>({
+        login: builder.mutation<ILoginResponse, ILogin>({
             query: (user: ILogin) => ({
                 url: "login",
                 method: "POST",

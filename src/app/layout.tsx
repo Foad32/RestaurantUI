@@ -5,6 +5,8 @@ import CssBaseline from "@mui/material/CssBaseline";
 import { Provider } from "react-redux"
 import { store } from "@/store";
 import './global.css'
+import { CacheProvider } from "@emotion/react";
+import rtlCache from "@/rtlCache ";
 
 
 export default function RootLayout({
@@ -13,15 +15,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="fa">
       <body>
-        <ThemeProvider theme={baselightTheme}>
-          {/* CssBaseline kickstart an elegant, consistent, and simple baseline to build upon. */}
-          <CssBaseline />
-          <Provider store={store}>
-            {children}
-          </Provider>
-        </ThemeProvider>
+        <CacheProvider value={rtlCache}>
+          <ThemeProvider theme={baselightTheme}>
+            {/* CssBaseline kickstart an elegant, consistent, and simple baseline to build upon. */}
+            <CssBaseline />
+            <Provider store={store}>
+              {children}
+            </Provider>
+          </ThemeProvider>
+        </CacheProvider>
       </body>
     </html>
   );
